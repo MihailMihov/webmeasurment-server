@@ -1,70 +1,72 @@
 #include "NTP.hpp"
 
+namespace NTP {
+
 WiFiUDP UDP;
 
-const char* serverName = "time.google.com";
-const int packetSize = 48;
-const unsigned int UDPport = 8888;
+constexpr const char server_name[] = "time.google.com";
+constexpr const uint8_t packet_size = 48;
+constexpr const uint16_t udp_port = 8888;
 
-IPAddress serverIP;
-byte packetBuffer[packetSize];
-byte timeZone = 2;
+IPAddress server_ip;
+uint8_t packet_buffer[packet_size];
+constexpr const int8_t time_zone = 2;
 
-void NTP::setup() { UDP.begin(UDPport); }
+void setup() { UDP.begin(udp_port); }
 
-void NTP::sendPacket() {
+void sendPacket() {
 
-    UDP.beginPacket(serverIP, 123);
-    UDP.write(packetBuffer, packetSize);
+    UDP.beginPacket(server_ip, 123);
+    UDP.write(packet_buffer, packet_size);
     UDP.endPacket();
 
 }
 
-void NTP::findServer() {
+void findServer() {
 
-    WiFi.hostByName(serverName, serverIP);
-
-}
-
-void NTP::constructPacket() {
-
-    memset(packetBuffer, 0, packetSize);
-
-    packetBuffer[0] = 0b11100011;
-    packetBuffer[1] = 0;
-    packetBuffer[2] = 6;
-    packetBuffer[3] = 0xEC;
-
-    packetBuffer[12] = 49;
-    packetBuffer[13] = 0x4E;
-    packetBuffer[14] = 49;
-    packetBuffer[15] = 52;
+    WiFi.hostByName(server_name, server_ip);
 
 }
 
-time_t NTP::getTime() {
+void constructPacket() {
 
-    while(UDP.parsePacket() > 0) ;
+    memset(packet_buffer, 0, packet_size);
+
+    packet_buffer[0] = 0b11100011;
+    packet_buffer[1] = 0;
+    packet_buffer[2] = 6;
+    packet_buffer[3] = 0xEC;
+
+    packet_buffer[12] = 49;
+    packet_buffer[13] = 0x4E;
+    packet_buffer[14] = 49;
+    packet_buffer[15] = 52;
+
+}
+
+time_t getTime() {
+
+    while(UDP.parsePacket() > 0);
 
     sendPacket();
 
-    unsigned long long beginWait = millis();
+    unsigned long long begin_wait = millis();
 
-    while (millis() - beginWait < 1500) {
+    while (millis() - begin_wait < 1500) {
 
-        int size = UDP.parsePacket();
+        uint8_t size = UDP.parsePacket();
 
-        if (size >= packetSize) {
+        if (size >= packet_size) {
 
-            UDP.read(packetBuffer, packetSize);
-            unsigned long secsSince1900;
+            UDP.read(packet_buffer, packet_size);
+            uint64_t secs_since_1900;
 
-            secsSince1900 =  (unsigned long)packetBuffer[40] << 24;
-            secsSince1900 |= (unsigned long)packetBuffer[41] << 16;
-            secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
-            secsSince1900 |= (unsigned long)packetBuffer[43];
+            secs_since_1900 =  static_cast<uint8_t>(packet_buffer[40] << 24);
+            secs_since_1900 |= static_cast<uint8_t>(packet_buffer[41] << 16);
+            secs_since_1900 |= static_cast<uint8_t>(packet_buffer[42] << 8);
+            secs_since_1900 |= static_cast<uint8_t>(packet_buffer[43]);
 
-            return secsSince1900 - 2208988800UL + timeZone * 3600;
+            return secs_since_1900 - 2208988800UL + time_zone * 3600;
 
         }
 
@@ -73,3 +75,5 @@ time_t NTP::getTime() {
     return 0; // No response
 
 }
+
+} // namespace NTP
