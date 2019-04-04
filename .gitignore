@@ -3,3 +3,16 @@
 .clang_complete
 .clang_format
 .gcc-flags.json
+.vscode/.browse.c_cpp.db
+.vscode/.browse.c_cpp.db-shm
+.vscode/.browse.c_cpp.db-wal
+.vscode/c_cpp_properties.json
+.vscode/extensions.json
+.vscode/launch.json
+.vscode/settings.json
+.vscode/ipch/2ece5b806e32811d/OTA.ipch
+.vscode/ipch/2ece5b806e32811d/mmap_address.bin
+.vscode/ipch/3f7da24cca5cc042/main.ipch
+.vscode/ipch/3f7da24cca5cc042/mmap_address.bin
+.vscode/ipch/d40c52492e2d65ad/NTP.ipch
+.vscode/ipch/d40c52492e2d65ad/mmap_address.bin
