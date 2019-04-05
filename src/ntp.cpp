@@ -1,6 +1,6 @@
-#include "NTP.hpp"
+#include "ntp.hpp"
 
-namespace NTP {
+namespace ntp {
 
 WiFiUDP UDP;
 
@@ -12,20 +12,18 @@ IPAddress server_ip;
 uint8_t packet_buffer[packet_size];
 constexpr const int8_t time_zone = 2;
 
-void setup() { UDP.begin(udp_port); }
+void setup() {
+    UDP.begin(udp_port);
+}
 
 void sendPacket() {
-
     UDP.beginPacket(server_ip, 123);
     UDP.write(packet_buffer, packet_size);
     UDP.endPacket();
-
 }
 
 void findServer() {
-
     WiFi.hostByName(server_name, server_ip);
-
 }
 
 void constructPacket() {
@@ -76,4 +74,4 @@ time_t getTime() {
 
 }
 
-} // namespace NTP
+} // namespace ntp

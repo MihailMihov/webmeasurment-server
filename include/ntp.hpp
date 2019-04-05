@@ -3,7 +3,7 @@
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 
-namespace NTP {
+namespace ntp {
 
     void setup();
     void sendPacket();

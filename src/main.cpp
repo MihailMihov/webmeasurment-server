@@ -1,131 +1,81 @@
 #include <Arduino.h>
 #include <ArduinoOTA.h>
 #include <ESP8266WebServer.h>
-#include <ESP8266WiFi.h>
 #include <FS.h>
 #include <TimeLib.h>
 
-#include <string>
+#include "../conf.hpp"
+#include "ntp.hpp"
+#include "ota.hpp"
 
-#include "NTP.hpp"
-#include "OTA.hpp"
+double_t measure(bool writeResult);
+constexpr double_t duration_to_cm (uint32_t duration);
 
-const char *ssid = "HomeWLBill";
-const char *password = "2468013579";
+FSInfo fs_info;
 
-static const unsigned int webServerPort = 80;
+constexpr const char* ssid = STASSID;
+constexpr const char* psk = STAPSK;
+constexpr const uint16_t web_server_port = 80;
+constexpr const uint8_t signal_pin = 5;
+uint32_t  prev_millis = 0;
 
-const byte signalPin = 5;
+ESP8266WebServer server(web_server_port);
 
-unsigned long prevMillis = 0;
-
-void setupWiFi();
-void setupServer();
-void setupTime();
-void setupSPIFFS();
-
-void handleRoot();
-void handleMeasurments();
-void handleNow();
-
-int measure(bool writeResult);
-
-ESP8266WebServer Server(webServerPort);
+#include "init.hpp"
 
 void setup() {
 
   Serial.begin(9600);
 
-  setupWiFi();
-  setupServer();
-  NTP::setup();
-  OTA::setup();
-  setupTime();
-  setupSPIFFS();
-  prevMillis = millis();
+  init_n::wifi(ssid, psk);
+  init_n::fs();
+  init_n::webserver(server);
+  init_n::ntp();
+  init_n::ota();
+  init_n::time();
+
 }
 
 void loop() {
 
-  if (millis() - prevMillis > 300000)
+  if (millis() - prev_millis > 300000) {
     measure(true);
-  Server.handleClient();
+    prev_millis = millis();
+  }
+
+  server.handleClient();
   ArduinoOTA.handle();
 }
 
-void setupWiFi() {
+double_t measure(bool writeResult) {
 
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
+  uint32_t duration;
+  double_t distance;
 
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-  }
-}
-
-void setupServer() {
-
-  Server.on("/", handleRoot);
-  Server.on("/measurments", handleMeasurments);
-  Server.on("/now", [](){
-    Server.send(200, "text/plain", String(measure(false)));
-  });
-  Server.on("/restart", [](){
-    ESP.restart();
-  });
-  Server.begin();
-}
-
-void setupTime() {
-
-  setSyncProvider(NTP::getTime);
-  setSyncInterval(30);
-}
-
-void setupSPIFFS() { SPIFFS.begin(); }
-
-void handleRoot() {
-
-  File file = SPIFFS.open("/index.htm", "r");
-  Server.streamFile(file, "text/html");
-  file.close();
-
-}
-
-void handleMeasurments() {
-
-  File file = SPIFFS.open("/measurments.txt", "r");
-  Server.streamFile(file, "text/plain");
-  file.close();
-
-}
-
-int measure(bool writeResult) {
-
-  long duration;
-  int distance;
-
-  pinMode(signalPin, OUTPUT);
-  digitalWrite(signalPin, LOW);
-  digitalWrite(signalPin, HIGH);
+  pinMode(signal_pin, OUTPUT);
+  digitalWrite(signal_pin, LOW);
+  digitalWrite(signal_pin, HIGH);
   delayMicroseconds(20);
-  digitalWrite(signalPin, LOW);
+  digitalWrite(signal_pin, LOW);
 
-  pinMode(signalPin, INPUT);
-  duration = pulseIn(signalPin, HIGH);
+  pinMode(signal_pin, INPUT);
+  duration = pulseIn(signal_pin, HIGH);
 
   yield();
 
-  distance = (float)duration * 34 / 2000.0;
+  distance = duration_to_cm(duration);
 
   if(writeResult) {
-    File measurmentFile = SPIFFS.open("/measurments", "a");
-    measurmentFile.printf("%lu,%d\n", now(), distance);
-    measurmentFile.close();
-    return 0;
+    File measurment_file = SPIFFS.open("/measurments", "a");
+    time_t time_now = now();
+    measurment_file.printf("%d/%d/%d %d:%d:%d, %f\n", day(time_now), month(time_now), year(time_now), hour(time_now), minute(time_now), second(time_now), distance);
+    measurment_file.close();
   }
-  else {
-    return distance;
-  }
+    
+  return distance;
 
+}
+
+constexpr double_t duration_to_cm (uint32_t duration) {
+  return static_cast<double_t>(duration * 34 / 2000.f);
 }
