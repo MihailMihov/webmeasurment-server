@@ -7,21 +7,19 @@
 #include "../conf.hpp"
 #include "ntp.hpp"
 #include "ota.hpp"
+#include "init.hpp"
 
 double_t measure(bool writeResult);
 constexpr double_t duration_to_cm (uint32_t duration);
-
-FSInfo fs_info;
 
 constexpr const char* ssid = STASSID;
 constexpr const char* psk = STAPSK;
 constexpr const uint16_t web_server_port = 80;
 constexpr const uint8_t signal_pin = 5;
-uint32_t  prev_millis = 0;
+uint32_t prev_millis = 0;
 
 ESP8266WebServer server(web_server_port);
-
-#include "init.hpp"
+FSInfo fs_info;
 
 void setup() {
 
@@ -42,6 +40,8 @@ void loop() {
     measure(true);
     prev_millis = millis();
   }
+
+  yield();
 
   server.handleClient();
   ArduinoOTA.handle();
