@@ -2,6 +2,7 @@
 
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
+#include <TimeLib.h>
 
 namespace ntp {
 

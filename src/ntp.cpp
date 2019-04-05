@@ -1,19 +1,19 @@
 #include "ntp.hpp"
 
-namespace ntp {
-
+constexpr const char server_name[] = "time.google.com";
+constexpr const int8_t time_zone = 2;
+constexpr const uint16_t udp_port = 8888;
+constexpr const uint8_t packet_size = 48;
+uint8_t packet_buffer[packet_size];
+IPAddress server_ip;
 WiFiUDP UDP;
 
-constexpr const char server_name[] = "time.google.com";
-constexpr const uint8_t packet_size = 48;
-constexpr const uint16_t udp_port = 8888;
-
-IPAddress server_ip;
-uint8_t packet_buffer[packet_size];
-constexpr const int8_t time_zone = 2;
+namespace ntp {
 
 void setup() {
     UDP.begin(udp_port);
+    setSyncProvider(getTime);
+    setSyncInterval(10);
 }
 
 void sendPacket() {
