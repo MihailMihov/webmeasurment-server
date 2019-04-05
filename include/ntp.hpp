@@ -7,9 +7,9 @@
 namespace ntp {
 
     void setup();
-    void sendPacket();
-    void findServer();
-    void constructPacket();
-    time_t getTime();
+    void send_packet();
+    void find_server();
+    void construct_packet();
+    time_t get_time();
 
 }

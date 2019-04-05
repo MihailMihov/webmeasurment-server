@@ -7,9 +7,11 @@
 #include <TimeLib.h>
 
 #include "ntp.hpp"
+#pragma once
+
 #include "ota.hpp"
 
-extern double_t measure(bool writeResult);
+extern double_t measure(bool write_result);
 extern FSInfo fs_info;
 extern uint32_t prev_millis;
 

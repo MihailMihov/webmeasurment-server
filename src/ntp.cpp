@@ -1,7 +1,7 @@
 #include "ntp.hpp"
 
 constexpr const char server_name[] = "time.google.com";
-constexpr const int8_t time_zone = 2;
+constexpr const int8_t time_zone = 1;
 constexpr const uint16_t udp_port = 8888;
 constexpr const uint8_t packet_size = 48;
 uint8_t packet_buffer[packet_size];
@@ -12,21 +12,21 @@ namespace ntp {
 
 void setup() {
     UDP.begin(udp_port);
-    setSyncProvider(getTime);
+    setSyncProvider(get_time);
     setSyncInterval(10);
 }
 
-void sendPacket() {
+void send_packet() {
     UDP.beginPacket(server_ip, 123);
     UDP.write(packet_buffer, packet_size);
     UDP.endPacket();
 }
 
-void findServer() {
+void find_server() {
     WiFi.hostByName(server_name, server_ip);
 }
 
-void constructPacket() {
+void construct_packet() {
 
     memset(packet_buffer, 0, packet_size);
 
@@ -42,13 +42,15 @@ void constructPacket() {
 
 }
 
-time_t getTime() {
+time_t get_time() {
 
     while(UDP.parsePacket() > 0);
 
-    sendPacket();
+    find_server();
+    construct_packet();
+    send_packet();
 
-    unsigned long long begin_wait = millis();
+    uint64_t begin_wait = millis();
 
     while (millis() - begin_wait < 1500) {
 
@@ -59,10 +61,10 @@ time_t getTime() {
             UDP.read(packet_buffer, packet_size);
             uint64_t secs_since_1900;
 
-            secs_since_1900 =  static_cast<uint8_t>(packet_buffer[40] << 24);
-            secs_since_1900 |= static_cast<uint8_t>(packet_buffer[41] << 16);
-            secs_since_1900 |= static_cast<uint8_t>(packet_buffer[42] << 8);
-            secs_since_1900 |= static_cast<uint8_t>(packet_buffer[43]);
+            secs_since_1900 =  static_cast<uint32_t>(packet_buffer[40] << 24);
+            secs_since_1900 |= static_cast<uint32_t>(packet_buffer[41] << 16);
+            secs_since_1900 |= static_cast<uint32_t>(packet_buffer[42] << 8);
+            secs_since_1900 |= static_cast<uint32_t>(packet_buffer[43]);
 
             return secs_since_1900 - 2208988800UL + time_zone * 3600;
 

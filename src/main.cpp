@@ -3,16 +3,15 @@
 #include <ESP8266WebServer.h>
 #include <FS.h>
 
-#include "../conf.hpp"
 #include "ntp.hpp"
 #include "ota.hpp"
 #include "init.hpp"
 
-double_t measure(bool writeResult);
+double_t measure(bool write_result);
 constexpr double_t duration_to_cm (uint32_t duration);
 
-constexpr const char* ssid = STASSID;
-constexpr const char* psk = STAPSK;
+constexpr const char* ssid = "HomeWLBill";
+constexpr const char* psk = "2468013579";
 constexpr const uint16_t web_server_port = 80;
 constexpr const uint8_t signal_pin = 5;
 uint32_t prev_millis = 0;
@@ -41,12 +40,13 @@ void loop() {
   }
 
   yield();
-
+  now();
   server.handleClient();
   ArduinoOTA.handle();
+  SPIFFS.info(fs_info);
 }
 
-double_t measure(bool writeResult) {
+double_t measure(bool write_result) {
 
   uint32_t duration;
   double_t distance;
@@ -62,12 +62,12 @@ double_t measure(bool writeResult) {
 
   yield();
 
-  distance = duration_to_cm(duration);
+  distance = 195.f - duration_to_cm(duration);
 
-  if(writeResult) {
-    File measurment_file = SPIFFS.open("/measurments", "a");
+  if(write_result) {
+    File measurment_file = SPIFFS.open("/data.txt", "a");
     time_t time_now = now();
-    measurment_file.printf("%d/%d/%d %d:%d:%d, %f\n", day(time_now), month(time_now), year(time_now), hour(time_now), minute(time_now), second(time_now), distance);
+    measurment_file.printf("%d/%d/%d %d:%d:%d, %.2f\n", day(time_now), month(time_now), year(time_now), hour(time_now), minute(time_now), second(time_now), distance);
     measurment_file.close();
   }
     
@@ -75,6 +75,6 @@ double_t measure(bool writeResult) {
 
 }
 
-constexpr double_t duration_to_cm (uint32_t duration) {
+[[nodiscard]] constexpr double_t duration_to_cm (uint32_t duration) {
   return static_cast<double_t>(duration * 34 / 2000.f);
 }

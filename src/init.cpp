@@ -26,7 +26,7 @@ void webserver(ESP8266WebServer& server) {
     file.close();
   });
   server.on("/measurments", [&]{
-    File file = SPIFFS.open("/measurments", "r");
+    File file = SPIFFS.open("/data.txt", "r");
     if(!file)
     {
       server.send(200, "text/plain", "File open failed");
@@ -51,7 +51,21 @@ void webserver(ESP8266WebServer& server) {
     String str = "millis: " + String(millis()) + '\n' + "prev_millis: " + String(prev_millis);
     server.send(200, "text/plain", str);
   });
+  server.on("/time", [&]{
+    time_t time_now = now();
+    String str = String(day(time_now)) + '/' + String(month(time_now)) + '/' + String(year(time_now)) + ' ' + String(hour(time_now)) + ':' + String(minute(time_now)) + ':' + String(second(time_now));
+    server.send(200, "text/plain", str);
+  });
+  server.on("/get_time", [&]{
+    server.send(200, "text/plain", String(ntp::get_time()));
+  });
   server.on("/restart", []{
+    SPIFFS.end();
+    ESP.restart();
+  });
+  server.on("/format", []{
+    SPIFFS.end();
+    SPIFFS.format();
     ESP.restart();
   });
 
@@ -59,13 +73,12 @@ void webserver(ESP8266WebServer& server) {
 }
 
 void time() {
-  setSyncProvider(ntp::getTime);
+  setSyncProvider(ntp::get_time);
   setSyncInterval(30);
 }
 
 void fs() {
   SPIFFS.begin();
-  SPIFFS.info(fs_info);
 }
 
 void ntp() {
