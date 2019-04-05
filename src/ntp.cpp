@@ -59,9 +59,9 @@ time_t get_time() {
         if (size >= packet_size) {
 
             UDP.read(packet_buffer, packet_size);
-            uint64_t secs_since_1900;
+            uint32_t secs_since_1900;
 
-            secs_since_1900 =  static_cast<uint32_t>(packet_buffer[40] << 24);
+            secs_since_1900  = static_cast<uint32_t>(packet_buffer[40] << 24);
             secs_since_1900 |= static_cast<uint32_t>(packet_buffer[41] << 16);
             secs_since_1900 |= static_cast<uint32_t>(packet_buffer[42] << 8);
             secs_since_1900 |= static_cast<uint32_t>(packet_buffer[43]);
