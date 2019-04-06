@@ -1,7 +1,7 @@
 #include "ntp.hpp"
 
 constexpr const char server_name[] = "time.google.com";
-constexpr const int8_t time_zone = 1;
+constexpr const int8_t time_zone = 3;
 constexpr const uint16_t udp_port = 8888;
 constexpr const uint8_t packet_size = 48;
 uint8_t packet_buffer[packet_size];

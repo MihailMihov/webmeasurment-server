@@ -134,8 +134,13 @@ void init_webserver(ESP8266WebServer& server) {
     String str = String(day(time_now)) + '/' + String(month(time_now)) + '/' + String(year(time_now)) + ' ' + String(hour(time_now)) + ':' + String(minute(time_now)) + ':' + String(second(time_now));
     server.send(200, "text/plain", str);
   });
-  server.on("/files", []{
-      
+  server.on("/files", [&]{
+    String str;
+    Dir directory = SPIFFS.openDir("");
+    while(directory.next()){
+      str += directory.fileName() + " size: " + directory.fileSize() + "B\n"; 
+    }
+    server.send(200, "text/plain", str);
   });
   server.on("/restart", []{
     SPIFFS.end();
